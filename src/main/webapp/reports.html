@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📊 Analytics & Reports | OrderPro System</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- Chart.js for Graphs -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* 📊 Reports Specific Styles */
+        .reports-hero {
+            background: linear-gradient(135deg, #6a11cb, #2575fc);
+            color: white;
+            padding: 50px;
+            border-radius: 25px;
+            margin-bottom: 40px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+            margin: 40px 0;
+        }
+        
+        .stat-box {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stat-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: linear-gradient(90deg, #6a11cb, #2575fc);
+        }
+        
+        .stat-box:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+        
+        .stat-trend {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            margin-top: 10px;
+            animation: pulse 2s infinite;
+        }
+        
+        .trend-up { background: #d4edda; color: #155724; }
+        .trend-down { background: #f8d7da; color: #721c24; }
+        
+        /* Charts Container */
+        .charts-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 30px;
+            margin: 50px 0;
+        }
+        
+        .chart-card {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+        }
+        
+        .chart-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+        
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        /* Filter Controls */
+        .filter-bar {
+            background: white;
+            padding: 25px;
+            border-radius: 20px;
+            margin: 30px 0;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        .filter-select {
+            padding: 12px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            background: white;
+            font-size: 1rem;
+            min-width: 200px;
+        }
+        
+        /* Data Table */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 30px 0;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            animation: slideInUp 1s ease-out;
+        }
+        
+        .data-table th {
+            background: linear-gradient(135deg, #6a11cb, #2575fc);
+            color: white;
+            padding: 20px;
+            text-align: left;
+        }
+        
+        .data-table td {
+            padding: 15px 20px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .data-table tr:hover {
+            background: #f8f9fa;
+        }
+        
+        /* Export Options */
+        .export-options {
+            display: flex;
+            gap: 15px;
+            margin: 40px 0;
+            flex-wrap: wrap;
+        }
+        
+        .export-btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s;
+        }
+        
+        .export-pdf { background: #dc3545; color: white; }
+        .export-excel { background: #28a745; color: white; }
+        .export-csv { background: #17a2b8; color: white; }
+        .export-print { background: #6c757d; color: white; }
+        
+        .export-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+        
+        /* Sparkline Animation */
+        .sparkline {
+            height: 40px;
+            width: 100px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .sparkline-line {
+            position: absolute;
+            width: 100%;
+            height: 2px;
+            background: #28a745;
+            bottom: 0;
+            animation: drawLine 2s ease-out forwards;
+        }
+        
+        @keyframes drawLine {
+            from { width: 0; }
+            to { width: 100%; }
+        }
+        
+        /* KPI Cards */
+        .kpi-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin: 40px 0;
+        }
+        
+        .kpi-card {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 30px;
+            border-radius: 20px;
+            position: relative;
+            overflow: hidden;
+            animation: fadeIn 1s ease-out;
+        }
+        
+        .kpi-card:nth-child(2) { background: linear-gradient(135deg, #f093fb, #f5576c); }
+        .kpi-card:nth-child(3) { background: linear-gradient(135deg, #4facfe, #00f2fe); }
+        
+        .kpi-value {
+            font-size: 3rem;
+            font-weight: 800;
+            margin: 10px 0;
+        }
+        
+        /* Loading Animation */
+        .chart-loading {
+            height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f8f9fa;
+            border-radius: 15px;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes slideInUp {
+            from { opacity: 0; transform: translateY(50px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 📊 Reports Header -->
+        <div class="reports-hero">
+            <h1><i class="fas fa-chart-line"></i> Analytics & Reports</h1>
+            <p>Comprehensive insights and analytics for your business</p>
+        </div>
+        
+        <!-- 🔙 Back Button -->
+        <a href="index.html" class="btn btn-secondary" style="margin-bottom: 20px;">
+            <i class="fas fa-arrow-left"></i> Back to Dashboard
+        </a>
+        
+        <!-- ⚡ Quick Stats -->
+        <div class="stats-grid">
+            <div class="stat-box">
+                <h3 style="color: #666; margin-bottom: 10px;">Total Revenue</h3>
+                <div class="kpi-value" id="totalRevenue">₹4,28,560</div>
+                <div class="stat-trend trend-up">
+                    <i class="fas fa-arrow-up"></i> 12.5% from last month
+                </div>
+            </div>
+            
+            <div class="stat-box">
+                <h3 style="color: #666; margin-bottom: 10px;">Orders This Month</h3>
+                <div class="kpi-value" id="monthOrders">156</div>
+                <div class="stat-trend trend-up">
+                    <i class="fas fa-arrow-up"></i> 8.3% increase
+                </div>
+            </div>
+            
+            <div class="stat-box">
+                <h3 style="color: #666; margin-bottom: 10px;">Avg Order Value</h3>
+                <div class="kpi-value" id="avgOrder">₹2,745</div>
+                <div class="stat-trend trend-down">
+                    <i class="fas fa-arrow-down"></i> 2.1% decrease
+                </div>
+            </div>
+            
+            <div class="stat-box">
+                <h3 style="color: #666; margin-bottom: 10px;">Customer Growth</h3>
+                <div class="kpi-value" id="customerGrowth">+42</div>
+                <div class="stat-trend trend-up">
+                    <i class="fas fa-arrow-up"></i> 24% growth
+                </div>
+            </div>
+        </div>
+        
+        <!-- 📅 Filter Controls -->
+        <div class="filter-bar">
+            <div>
+                <label style="font-weight: 600; margin-right: 10px;">Date Range:</label>
+                <select class="filter-select" id="dateRange">
+                    <option>Last 7 Days</option>
+                    <option selected>Last 30 Days</option>
+                    <option>Last Quarter</option>
+                    <option>Last Year</option>
+                    <option>Custom Range</option>
+                </select>
+            </div>
+            
+            <div>
+                <label style="font-weight: 600; margin-right: 10px;">Category:</label>
+                <select class="filter-select" id="categoryFilter">
+                    <option>All Categories</option>
+                    <option>Electronics</option>
+                    <option>Clothing</option>
+                    <option>Home & Kitchen</option>
+                    <option>Books</option>
+                </select>
+            </div>
+            
+            <div>
+                <label style="font-weight: 600; margin-right: 10px;">Status:</label>
+                <select class="filter-select" id="statusFilter">
+                    <option>All Status</option>
+                    <option>Completed</option>
+                    <option>Processing</option>
+                    <option>Pending</option>
+                    <option>Cancelled</option>
+                </select>
+            </div>
+            
+            <button class="btn" onclick="applyFilters()">
+                <i class="fas fa-filter"></i> Apply Filters
+            </button>
+        </div>
+        
+        <!-- 📈 Charts Section -->
+        <h2 style="margin: 50px 0 30px;">
+            <i class="fas fa-chart-bar"></i> Sales Analytics
+        </h2>
+        <div class="charts-container">
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3>Revenue Trend</h3>
+                    <span style="color: #28a745; font-weight: 600;">
+                        <i class="fas fa-arrow-up"></i> 12.5%
+                    </span>
+                </div>
+                <div class="chart-loading" id="revenueChartLoading">
+                    <i class="fas fa-spinner fa-spin fa-3x" style="color: #667eea;"></i>
+                </div>
+                <canvas id="revenueChart" style="display: none; width: 100%; height: 300px;"></canvas>
+            </div>
+            
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3>Order Volume</h3>
+                    <span style="color: #28a745; font-weight: 600;">
+                        <i class="fas fa-arrow-up"></i> 8.3%
+                    </span>
+                </div>
+                <div class="chart-loading" id="ordersChartLoading">
+                    <i class="fas fa-spinner fa-spin fa-3x" style="color: #764ba2;"></i>
+                </div>
+                <canvas id="ordersChart" style="display: none; width: 100%; height: 300px;"></canvas>
+            </div>
+            
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3>Category Distribution</h3>
+                    <span style="color: #6c757d; font-weight: 600;">Top: Electronics</span>
+                </div>
+                <div class="chart-loading" id="categoryChartLoading">
+                    <i class="fas fa-spinner fa-spin fa-3x" style="color: #ff7e5f;"></i>
+                </div>
+                <canvas id="categoryChart" style="display: none; width: 100%; height: 300px;"></canvas>
+            </div>
+            
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3>Customer Geography</h3>
+                    <span style="color: #6c757d; font-weight: 600;">Top: Chennai</span>
+                </div>
+                <div class="chart-loading" id="geoChartLoading">
+                    <i class="fas fa-spinner fa-spin fa-3x" style="color: #00CED1;"></i>
+                </div>
+                <canvas id="geoChart" style="display: none; width: 100%; height: 300px;"></canvas>
+            </div>
+        </div>
+        
+        <!-- 📋 Top Products Table -->
+        <div class="card">
+            <h2><i class="fas fa-trophy"></i> Top Performing Products</h2>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Category</th>
+                        <th>Units Sold</th>
+                        <th>Revenue</th>
+                        <th>Trend</th>
+                        <th>Rating</th>
+                    </tr>
+                </thead>
+                <tbody id="topProductsTable">
+                    <!-- Data will be populated by JavaScript -->
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- 📤 Export Options -->
+        <div class="card">
+            <h2><i class="fas fa-download"></i> Export Reports</h2>
+            <p style="color: #666; margin-bottom: 20px;">Download reports in various formats for offline analysis</p>
+            <div class="export-options">
+                <button class="export-btn export-pdf" onclick="exportReport('pdf')">
+                    <i class="fas fa-file-pdf"></i> Export as PDF
+                </button>
+                <button class="export-btn export-excel" onclick="exportReport('excel')">
+                    <i class="fas fa-file-excel"></i> Export as Excel
+                </button>
+                <button class="export-btn export-csv" onclick="exportReport('csv')">
+                    <i class="fas fa-file-csv"></i> Export as CSV
+                </button>
+                <button class="export-btn export-print" onclick="printReport()">
+                    <i class="fas fa-print"></i> Print Report
+                </button>
+            </div>
+        </div>
+        
+        <!-- 🔗 Navigation -->
+        <div class="nav-links">
+            <a href="index.html" class="btn btn-secondary">
+                <i class="fas fa-home"></i> Dashboard
+            </a>
+            <a href="order_form.html" class="btn">
+                <i class="fas fa-plus"></i> New Order
+            </a>
+            <a href="ViewOrdersServlet" class="btn">
+                <i class="fas fa-list"></i> All Orders
+            </a>
+            <a href="track.html" class="btn btn-secondary">
+                <i class="fas fa-truck"></i> Track Orders
+            </a>
+        </div>
+    </div>
+    
+    <!-- 🏆 Footer -->
+    <div class="footer" style="background: #333; color: white; margin-top: 50px; padding: 40px 20px;">
+        <div style="text-align: center;">
+            <p>📊 <strong>Analytics Dashboard</strong> &copy; 2024</p>
+            <p style="margin-top: 10px; color: #aaa;">
+                Data updated in real-time | Last refresh: <span id="lastRefresh">Just now</span>
+            </p>
+        </div>
+    </div>
+    
+    <script>
+        // Sample data for products
+        const topProducts = [
+            { product: "Laptop Pro X1", category: "Electronics", sold: 142, revenue: "₹42,60,000", trend: "up", rating: 4.8 },
+            { product: "Smartphone S24", category: "Electronics", sold: 89, revenue: "₹22,25,000", trend: "up", rating: 4.7 },
+            { product: "Wireless Headphones", category: "Audio", sold: 156, revenue: "₹7,80,000", trend: "up", rating: 4.5 },
+            { product: "Gaming Keyboard", category: "Accessories", sold: 78, revenue: "₹1,95,000", trend: "stable", rating: 4.3 },
+            { product: "Monitor 27\"", category: "Electronics", sold: 45, revenue: "₹8,10,000", trend: "up", rating: 4.6 },
+            { product: "Tablet Air", category: "Electronics", sold: 67, revenue: "₹16,75,000", trend: "down", rating: 4.4 },
+            { product: "Smart Watch", category: "Wearables", sold: 92, revenue: "₹11,04,000", trend: "up", rating: 4.2 },
+            { product: "Bluetooth Speaker", category: "Audio", sold: 123, revenue: "₹9,84,000", trend: "up", rating: 4.1 }
+        ];
+        
+        // Initialize Charts
+        function initializeCharts() {
+            // Revenue Chart
+            setTimeout(() => {
+                document.getElementById('revenueChartLoading').style.display = 'none';
+                document.getElementById('revenueChart').style.display = 'block';
+                
+                const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+                new Chart(revenueCtx, {
+                    type: 'line',
+                    data: {
+                        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                        datasets: [{
+                            label: 'Revenue (in ₹)',
+                            data: [120000, 135000, 142000, 155000, 165000, 185000, 195000, 210000, 225000, 245000, 265000, 285000],
+                            borderColor: '#667eea',
+                            backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                            borderWidth: 3,
+                            fill: true,
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        animation: {
+                            duration: 2000,
+                            easing: 'easeOutQuart'
+                        }
+                    }
+                });
+            }, 1500);
+            
+            // Orders Chart
+            setTimeout(() => {
+                document.getElementById('ordersChartLoading').style.display = 'none';
+                document.getElementById('ordersChart').style.display = 'block';
+                
+                const ordersCtx = document.getElementById('ordersChart').getContext('2d');
+                new Chart(ordersCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                        datasets: [{
+                            label: 'Orders',
+                            data: [45, 52, 48, 65, 72, 85, 42],
+                            backgroundColor: [
+                                'rgba(255, 99, 132, 0.7)',
+                                'rgba(54, 162, 235, 0.7)',
+                                'rgba(255, 206, 86, 0.7)',
+                                'rgba(75, 192, 192, 0.7)',
+                                'rgba(153, 102, 255, 0.7)',
+                                'rgba(255, 159, 64, 0.7)',
+                                'rgba(118, 75, 162, 0.7)'
+                            ],
+                            borderColor: [
+                                'rgba(255, 99, 132, 1)',
+                                'rgba(54, 162, 235, 1)',
+                                'rgba(255, 206, 86, 1)',
+                                'rgba(75, 192, 192, 1)',
+                                'rgba(153, 102, 255, 1)',
+                                'rgba(255, 159, 64, 1)',
+                                'rgba(118, 75, 162, 1)'
+                            ],
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        animation: {
+                            duration: 2000
+                        }
+                    }
+                });
+            }, 2000);
+            
+            // Category Chart
+            setTimeout(() => {
+                document.getElementById('categoryChartLoading').style.display = 'none';
+                document.getElementById('categoryChart').style.display = 'block';
+                
+                const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+                new Chart(categoryCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Electronics', 'Clothing', 'Home & Kitchen', 'Books', 'Others'],
+                        datasets: [{
+                            data: [45, 25, 15, 10, 5],
+                            backgroundColor: [
+                                '#667eea',
+                                '#f093fb',
+                                '#4facfe',
+                                '#00f2fe',
+                                '#f5576c'
+                            ],
+                            borderWidth: 3
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        animation: {
+                            animateScale: true,
+                            animateRotate: true,
+                            duration: 2000
+                        }
+                    }
+                });
+            }, 2500);
+            
+            // Geography Chart
+            setTimeout(() => {
+                document.getElementById('geoChartLoading').style.display = 'none';
+                document.getElementById('geoChart').style.display = 'block';
+                
+                const geoCtx = document.getElementById('geoChart').getContext('2d');
+                new Chart(geoCtx, {
+                    type: 'polarArea',
+                    data: {
+                        labels: ['Chennai', 'Bangalore', 'Delhi', 'Mumbai', 'Hyderabad', 'Kolkata'],
+                        datasets: [{
+                            data: [45, 30, 25, 20, 15, 10],
+                            backgroundColor: [
+                                'rgba(255, 99, 132, 0.7)',
+                                'rgba(54, 162, 235, 0.7)',
+                                'rgba(255, 206, 86, 0.7)',
+                                'rgba(75, 192, 192, 0.7)',
+                                'rgba(153, 102, 255, 0.7)',
+                                'rgba(255, 159, 64, 0.7)'
+                            ]
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        animation: {
+                            animateRotate: true,
+                            animateScale: true
+                        }
+                    }
+                });
+            }, 3000);
+        }
+        
+        // Populate Top Products Table
+        function populateProductsTable() {
+            const tableBody = document.getElementById('topProductsTable');
+            tableBody.innerHTML = '';
+            
+            topProducts.forEach(product => {
+                const row = document.createElement('tr');
+                row.style.animation = 'fadeIn 0.5s ease-out';
+                
+                const trendIcon = product.trend === 'up' ? 
+                    '<i class="fas fa-arrow-up" style="color:#28a745"></i>' : 
+                    product.trend === 'down' ? 
+                    '<i class="fas fa-arrow-down" style="color:#dc3545"></i>' : 
+                    '<i class="fas fa-minus" style="color:#6c757d"></i>';
+                
+                const stars = '★'.repeat(Math.floor(product.rating)) + 
+                             '☆'.repeat(5 - Math.floor(product.rating));
+                
+                row.innerHTML = `
+                    <td><strong>${product.product}</strong></td>
+                    <td><span class="status-badge">${product.category}</span></td>
+                    <td>${product.sold}</td>
+                    <td><strong>${product.revenue}</strong></td>
+                    <td>${trendIcon} ${product.trend}</td>
+                    <td>
+                        <span style="color: #ffc107;">${stars}</span>
+                        <small>(${product.rating})</small>
+                    </td>
+                `;
+                
+                tableBody.appendChild(row);
+            });
+        }
+        
+        // Animate numbers
+        function animateNumbers() {
+            const revenue = document.getElementById('totalRevenue');
+            const orders = document.getElementById('monthOrders');
+            const avgOrder = document.getElementById('avgOrder');
+            const growth = document.getElementById('customerGrowth');
+            
+            animateCounter(revenue, 428560, 2000);
+            animateCounter(orders, 156, 1500);
+            animateCounter(avgOrder, 2745, 1800);
+            animateCounter(growth, 42, 1200);
+        }
+        
+        function animateCounter(element, target, duration) {
+            let current = 0;
+            const increment = target / (duration / 16);
+            
+            const timer = setInterval(() => {
+                current += increment;
+                if (current >= target) {
+                    if(element === document.getElementById('totalRevenue')) {
+                        element.textContent = '₹' + target.toLocaleString('en-IN');
+                    } else if(element === document.getElementById('avgOrder')) {
+                        element.textContent = '₹' + target.toLocaleString('en-IN');
+                    } else {
+                        element.textContent = target;
+                    }
+                    clearInterval(timer);
+                } else {
+                    if(element === document.getElementById('totalRevenue') || element === document.getElementById('avgOrder')) {
+                        element.textContent = '₹' + Math.floor(current).toLocaleString('en-IN');
+                    } else {
+                        element.textContent = Math.floor(current);
+                    }
+                }
+            }, 16);
+        }
+        
+        // Export functions
+        function exportReport(format) {
+            showNotification(`Exporting report as ${format.toUpperCase()}...`, 'success');
+            
+            // Simulate download
+            setTimeout(() => {
+                showNotification(`Report exported successfully as ${format.toUpperCase()}!`, 'success');
+            }, 1500);
+        }
+        
+        function printReport() {
+            window.print();
+        }
+        
+        function applyFilters() {
+            showNotification('Filters applied successfully!', 'success');
+            // In real app, you would reload data with filters
+        }
+        
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${type === 'success' ? '#28a745' : '#dc3545'};
+                color: white;
+                padding: 15px 25px;
+                border-radius: 10px;
+                box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+                z-index: 1000;
+                animation: slideInRight 0.5s ease-out;
+            `;
+            notification.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i> ${message}`;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.animation = 'slideOutRight 0.5s ease-out';
+                setTimeout(() => notification.remove(), 500);
+            }, 3000);
+        }
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeCharts();
+            populateProductsTable();
+            animateNumbers();
+            
+            // Update refresh time
+            function updateRefreshTime() {
+                const now = new Date();
+                const timeString = now.toLocaleTimeString('en-IN');
+                document.getElementById('lastRefresh').textContent = timeString;
+            }
+            
+            updateRefreshTime();
+            setInterval(updateRefreshTime, 60000); // Update every minute
+            
+            // Auto-refresh simulation
+            setInterval(() => {
+                const refreshBtn = document.createElement('button');
+                refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Data Updated';
+                refreshBtn.style.cssText = `
+                    position: fixed;
+                    bottom: 20px;
+                    right: 20px;
+                    background: #28a745;
+                    color: white;
+                    border: none;
+                    padding: 10px 20px;
+                    border-radius: 20px;
+                    cursor: pointer;
+                    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+                    animation: fadeIn 0.5s ease-out;
+                    z-index: 1000;
+                `;
+                document.body.appendChild(refreshBtn);
+                
+                setTimeout(() => {
+                    refreshBtn.style.animation = 'fadeOut 0.5s ease-out';
+                    setTimeout(() => refreshBtn.remove(), 500);
+                }, 3000);
+            }, 30000);
+        });
+    </script>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+</body>
+</html>
